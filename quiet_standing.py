@@ -22,7 +22,7 @@ FILE_NAMEd = 'wii_baseline_2016-03-02_15-08-09' #file name without extension
 
 def read_file(file_path, file_name, tag_format = 'obci'):
     "From *filepath* and *filename* it returns WBBReadManager object"
-    file_name = file_path+file_name
+    file_name = file_path + file_name
     wbb_mgr = WBBReadManager(file_name+'.obci.xml', file_name+'.obci.raw', file_name + '.' + tag_format + '.tag')
     return wbb_mgr
 
@@ -54,7 +54,7 @@ def read_wiidata(filepath, filename, tags_labels=None, show=True, supt=True):
  
     #extract fragments from standing task with eyes open
     # first subject
-    smart_tags = wii_cut_fragments(wbb_mgr, start_tag_name=tags_labels[0][0], 
+    smart_tags = wii_cut_fragments(wbb_mgr, start_tag_name=tags_labels[0][0],
                                             end_tags_names=[tags_labels[0][1]])
     sm_x = smart_tags[0].get_channel_samples('x')
     sm_y = smart_tags[0].get_channel_samples('y')
@@ -70,8 +70,13 @@ def read_wiidata(filepath, filename, tags_labels=None, show=True, supt=True):
         py.show()
     return sm_x, sm_y, sm_x_oz, sm_y_oz, wbb_mgr
  
-def wii_plot(sm_x, sm_y, sm_x_oz, sm_y_oz, n_bins=25, subject_name=''):
-    "From specified time series it plots histograms of standing deviations"
+def wii_plot(sm_x, sm_y, sm_x_oz, sm_y_oz, n_bins=25, subject_name='', savepic=False):
+    """
+    From specified time series it plots histograms of standing deviations
+    
+    *subject_name* - name of file which will be printed as a suptitle
+    *savepic* - saves figure in main directory
+    """
     mn_x1, mn_y1 = min(sm_x), min(sm_y)
     mx_x1, mx_y1 = max(sm_x), max(sm_y)
     mn_x2, mn_y2 = min(sm_x), min(sm_y)
@@ -104,6 +109,8 @@ def wii_plot(sm_x, sm_y, sm_x_oz, sm_y_oz, n_bins=25, subject_name=''):
     py.colorbar(cax=position)
     if len(subject_name)>0:
         py.suptitle('subject: {}'.format(subject_name))
+    if savepic:
+        py.savefig('lochist_{}.png'.format(subject_name))
     py.show()
 
 def calculate_coef_wii(sm_x, sm_y, wbb_mgr, title=''):
@@ -151,7 +158,7 @@ def romberg_coeff(sm_x, sm_y, sm_x_oz, sm_y_oz, wbb_mgr, q=True):
     path_length_oz, _, _ = wii_COP_path(wbb_mgr, sm_x_oz, sm_y_oz, plot=False)
     
     if q:
-        print('Romberg: {}'.format(path_length_oz/path_length))
+        print('Romberg measure: {}'.format(path_length_oz/path_length))
     return path_length_oz/path_length
 
 if __name__ == '__main__':
