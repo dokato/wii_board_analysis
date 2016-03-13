@@ -109,40 +109,42 @@ class WiiSway(object):
 
     def max_sway_quick(self, direction):
         "maximal sway from given *direction* averaged over trials"
-        self.sm_x = self.__dict__["{}_x_quick".format(direction)]
-        self.sm_y = self.__dict__["{}_y_quick".format(direction)]
+        sm_x = self.__dict__["{}_x_quick".format(direction)]
+        sm_y = self.__dict__["{}_y_quick".format(direction)]
         x_sway = np.zeros(self.N)
         y_sway = np.zeros(self.N)
         sway = np.zeros(self.N)
         for i in range(self.N): 
-            max_sway, max_AP, max_ML = wii_max_sway_AP_MP(self.sm_x[i], self.sm_y[i])
+            max_sway, max_AP, max_ML = wii_max_sway_AP_MP(sm_x[i], sm_y[i])
             x_sway[i] = max_AP
             y_sway[i] = max_ML
             sway[i] = max_sway
         return np.mean(sway)
         
     
-    def plot_movement(self, show=False):
-        "Show COP pictures of data"
+    def plot_movement(self, direction, show=False):
+        "Show or save COP pictures of data for given *direction*"
+        sm_x = self.__dict__["{}_x_quick".format(direction)]
+        sm_y = self.__dict__["{}_y_quick".format(direction)]
         py.figure()
         for i in range(self.N):
-            time = np.linspace(0, len(self.sm_x[i])/self.fs, len(self.sm_x[i]))
+            time = np.linspace(0, len(sm_x[i])/self.fs, len(sm_x[i]))
             ax1 = py.subplot(221)
             ax2 = py.subplot(223)
             ax3 = py.subplot(122)
-            ax1.plot(time, self.sm_x[i])
+            ax1.plot(time, sm_x[i])
             ax1.set_ylabel('position COPx [cm]')
             ax1.set_title('COPx position')
-            ax2.plot(time, self.sm_y[i])
+            ax2.plot(time, sm_y[i])
             ax2.set_ylabel('position COPy [cm]')
             ax2.set_xlabel('Time [s]')
             ax2.set_title('COPy position')
-            ax3.plot(self.sm_x[i],self.sm_y[i])
+            ax3.plot(sm_x[i],sm_y[i])
             ax3.set_ylabel('position COPy [cm]')
             ax3.set_xlabel('position COPx [cm]')
             ax3.set_title('COP position')
             py.tight_layout()
-            py.savefig('images/Nofeedback_Proba%d' % (i+1,))
+            py.savefig('images/' + direction + '_nofeedback_trial%d' % (i+1,))
             if show:
                 py.show()
             py.clf()
@@ -153,5 +155,6 @@ if __name__ == '__main__':
     wiisway.add_left(FILE_NAME_LEFT)
     wiisway.add_down(FILE_NAME_DOWN)
     wiisway.add_up(FILE_NAME_UP)
-    print wiisway.max_sway_quick("left")
-    wiisway.plot_movement()
+    for i in ["left", "right", "up", "down"]:
+        print("Max averaged sway {}: {}".format(i, wiisway.max_sway_quick(i)))
+        wiisway.plot_movement(i)
