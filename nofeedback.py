@@ -19,7 +19,10 @@ FILE_NAME_LEFT = 'wii_without_feedback_left_2016-03-02_14-46-45' #file name with
 FILE_NAME_RIGHT = 'wii_without_feedback_right_2016-03-02_14-44-03' #file name without extension 
 FILE_NAME_DOWN = 'wii_without_feedback_down_2016-03-02_14-45-29' #file name without extension 
 FILE_NAME_UP = 'wii_without_feedback_up_2016-03-02_14-40-47' #file name without extension
- 
+
+XSCALE = 22.5
+YSCALE = 13.
+
 def read_file(file_path, file_name, tag_format='obci'):
     file_name = file_path + file_name
     wbb_mgr = WBBReadManager(file_name+'.obci.xml', file_name+'.obci.raw', file_name + '.' + tag_format + '.tag')
@@ -57,14 +60,14 @@ class WiiSway(object):
         smart_tags_quick = wii_cut_fragments(wbb_mgr, start_tag_name=self.tags_labels['quick'][0],
                                                       end_tags_names=[self.tags_labels['quick'][1]])
         #sig_fragments_quick = [i.get_samples() for i in smart_tags_quick]
-        x_quick = [i.get_channel_samples('x') for i in smart_tags_quick]
-        y_quick = [i.get_channel_samples('y') for i in smart_tags_quick]
+        x_quick = [XSCALE*i.get_channel_samples('x') for i in smart_tags_quick]
+        y_quick = [YSCALE*i.get_channel_samples('y') for i in smart_tags_quick]
         #extract fragments from sway&stay task (right)
         smart_tags_long = wii_cut_fragments(wbb_mgr, start_tag_name=self.tags_labels['long'][0],
                                                      end_tags_names=[self.tags_labels['long'][0]])
         #sig_fragments_long = [i.get_samples() for i in smart_tags_long]
-        x_long = [i.get_channel_samples('x') for i in smart_tags_quick]
-        y_long = [i.get_channel_samples('y') for i in smart_tags_quick]
+        x_long = [XSCALE*i.get_channel_samples('x') for i in smart_tags_quick]
+        y_long = [YSCALE*i.get_channel_samples('y') for i in smart_tags_quick]
         self.N = len(x_quick)
         return wbb_mgr, x_quick, y_quick, x_long, y_long
     
@@ -120,6 +123,7 @@ class WiiSway(object):
         
     
     def plot_movement(self, show=False):
+        "Show COP pictures of data"
         py.figure()
         for i in range(self.N):
             time = np.linspace(0, len(self.sm_x[i])/self.fs, len(self.sm_x[i]))
