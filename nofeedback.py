@@ -10,6 +10,8 @@ from obci.exps.ventures.analysis import analysis_helper
  
 #from obci.acquisition import acquisition_helper
 import numpy as np
+import matplotlib.pyplot as py
+py.style.use('ggplot')
 
 FILE_PATH = 'dane/wii_mg/' #full path
 
@@ -38,6 +40,7 @@ class WiiSway(object):
         else:
             self.tags_labels = {'quick': ['szybkie_start', 'szybkie_stop'],
                            'long' : ['start', 'stop']}
+                        
     
     def extract_signal_fragments(self, filename):
         "extract signal *filename* data for given condition (direction)"
@@ -45,7 +48,7 @@ class WiiSway(object):
         wbb_mgr = read_file(self.filepath, filename)
         wbb_mgr.get_x()
         wbb_mgr.get_y()
-        fs = analysis_baseline.estimate_fs(wbb_mgr.mgr.get_channel_samples('TSS'))
+        self.fs = analysis_baseline.estimate_fs(wbb_mgr.mgr.get_channel_samples('TSS'))
         wbb_mgr.mgr.set_param('sampling_frequency', analysis_baseline.estimate_fs(wbb_mgr.mgr.get_channel_samples('TSS')))
         #preprocessing
         wbb_mgr = wii_downsample_signal(wbb_mgr, factor=2, pre_filter=True, use_filtfilt=True)
@@ -62,6 +65,7 @@ class WiiSway(object):
         #sig_fragments_long = [i.get_samples() for i in smart_tags_long]
         x_long = [i.get_channel_samples('x') for i in smart_tags_quick]
         y_long = [i.get_channel_samples('y') for i in smart_tags_quick]
+        self.N = len(x_quick)
         return wbb_mgr, x_quick, y_quick, x_long, y_long
     
     def add_right(self, filename):
@@ -102,17 +106,42 @@ class WiiSway(object):
 
     def max_sway_quick(self, direction):
         "maximal sway from given *direction* averaged over trials"
-        sm_x = self.__dict__["{}_x_quick".format(direction)]
-        sm_y = self.__dict__["{}_y_quick".format(direction)]
-        x_sway = np.zeros(len(sm_x))
-        y_sway = np.zeros(len(sm_y))
-        sway = np.zeros(len(sm_y))
-        for i in range(len(sm_x)): 
-            max_sway, max_AP, max_ML = wii_max_sway_AP_MP(sm_x[i], sm_y[i])
+        self.sm_x = self.__dict__["{}_x_quick".format(direction)]
+        self.sm_y = self.__dict__["{}_y_quick".format(direction)]
+        x_sway = np.zeros(self.N)
+        y_sway = np.zeros(self.N)
+        sway = np.zeros(self.N)
+        for i in range(self.N): 
+            max_sway, max_AP, max_ML = wii_max_sway_AP_MP(self.sm_x[i], self.sm_y[i])
             x_sway[i] = max_AP
             y_sway[i] = max_ML
             sway[i] = max_sway
         return np.mean(sway)
+        
+    
+    def plot_movement(self, show=False):
+        py.figure()
+        for i in range(self.N):
+            time = np.linspace(0, len(self.sm_x[i])/self.fs, len(self.sm_x[i]))
+            ax1 = py.subplot(221)
+            ax2 = py.subplot(223)
+            ax3 = py.subplot(122)
+            ax1.plot(time, self.sm_x[i])
+            ax1.set_ylabel('position COPx [cm]')
+            ax1.set_title('COPx position')
+            ax2.plot(time, self.sm_y[i])
+            ax2.set_ylabel('position COPy [cm]')
+            ax2.set_xlabel('Time [s]')
+            ax2.set_title('COPy position')
+            ax3.plot(self.sm_x[i],self.sm_y[i])
+            ax3.set_ylabel('position COPy [cm]')
+            ax3.set_xlabel('position COPx [cm]')
+            ax3.set_title('COP position')
+            py.tight_layout()
+            py.savefig('images/Nofeedback_Proba%d' % (i+1,))
+            if show:
+                py.show()
+            py.clf()
 
 if __name__ == '__main__':
     wiisway = WiiSway(FILE_PATH)
@@ -121,3 +150,4 @@ if __name__ == '__main__':
     wiisway.add_down(FILE_NAME_DOWN)
     wiisway.add_up(FILE_NAME_UP)
     print wiisway.max_sway_quick("left")
+    wiisway.plot_movement()
