@@ -13,12 +13,19 @@ import numpy as np
 import matplotlib.pyplot as py
 py.style.use('ggplot')
 
-FILE_PATH = 'dane/wii_mg/' #full path
+PERSON = 'dk'
+FILE_PATH = 'dane/wii_' + PERSON + '/' #full path
 
-FILE_NAME_LEFT = 'wii_without_feedback_left_2016-03-02_14-46-45' #file name without extension 
-FILE_NAME_RIGHT = 'wii_without_feedback_right_2016-03-02_14-44-03' #file name without extension 
-FILE_NAME_DOWN = 'wii_without_feedback_down_2016-03-02_14-45-29' #file name without extension 
-FILE_NAME_UP = 'wii_without_feedback_up_2016-03-02_14-40-47' #file name without extension
+if PERSON == 'dk':
+    FILE_NAME_LEFT = 'wii_without_feedback_left_2016-03-02_15-13-46' #file name without extension 
+    FILE_NAME_RIGHT = 'wii_without_feedback_right_2016-03-02_15-11-32' #file name without extension 
+    FILE_NAME_DOWN = 'wii_without_feedback_down_2016-03-02_15-12-40' #file name without extension 
+    FILE_NAME_UP = 'wii_without_feedback_up_2016-03-02_15-10-20' #file name without extension
+else:
+    FILE_NAME_LEFT = 'wii_without_feedback_left_2016-03-02_14-46-45' #file name without extension 
+    FILE_NAME_RIGHT = 'wii_without_feedback_right_2016-03-02_14-44-03' #file name without extension 
+    FILE_NAME_DOWN = 'wii_without_feedback_down_2016-03-02_14-45-29' #file name without extension 
+    FILE_NAME_UP = 'wii_without_feedback_up_2016-03-02_14-40-47' #file name without extension
 
 XSCALE = 22.5
 YSCALE = 13.
