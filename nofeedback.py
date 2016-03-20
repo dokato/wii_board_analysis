@@ -13,7 +13,7 @@ import numpy as np
 import matplotlib.pyplot as py
 py.style.use('ggplot')
 
-PERSON = 'dk'
+PERSON = 'mg'
 FILE_PATH = 'dane/wii_' + PERSON + '/' #full path
 
 if PERSON == 'dk':
@@ -115,7 +115,7 @@ class WiiSway(object):
         self.down_wbb_mgr = wbb
 
     def max_sway_quick(self, direction):
-        "maximal sway from given *direction* averaged over trials"
+        "maximal sway from given *direction*"
         sm_x = self.__dict__["{}_x_quick".format(direction)]
         sm_y = self.__dict__["{}_y_quick".format(direction)]
         x_sway = np.zeros(self.N)
@@ -126,8 +126,35 @@ class WiiSway(object):
             x_sway[i] = max_AP
             y_sway[i] = max_ML
             sway[i] = max_sway
-        return np.mean(sway)
-        
+        self.__dict__["{}_best_idx".format(direction)] = np.argmax(sway)
+        return np.max(sway)
+
+    def plot_best_movement(self, direction, show=False):
+        "Show or save COP pictures of data for given *direction*"
+        idx = self.__dict__["{}_best_idx".format(direction)]
+        sm_x = self.__dict__["{}_x_quick".format(direction)][idx]
+        sm_y = self.__dict__["{}_y_quick".format(direction)][idx]
+        py.figure()
+        time = np.linspace(0, len(sm_x)/self.fs, len(sm_x))
+        ax1 = py.subplot(221)
+        ax2 = py.subplot(223)
+        ax3 = py.subplot(122)
+        ax1.plot(time, sm_x)
+        ax1.set_ylabel('position COPx [cm]')
+        ax1.set_title('COPx position')
+        ax2.plot(time, sm_y)
+        ax2.set_ylabel('position COPy [cm]')
+        ax2.set_xlabel('Time [s]')
+        ax2.set_title('COPy position')
+        ax3.plot(sm_x,sm_y)
+        ax3.set_ylabel('position COPy [cm]')
+        ax3.set_xlabel('position COPx [cm]')
+        ax3.set_title('COP position')
+        py.tight_layout()
+        py.savefig('images/nofeedback_best_trial_' + direction)
+        if show:
+            py.show()
+        py.clf()
     
     def plot_movement(self, direction, show=False):
         "Show or save COP pictures of data for given *direction*"
@@ -163,5 +190,5 @@ if __name__ == '__main__':
     wiisway.add_down(FILE_NAME_DOWN)
     wiisway.add_up(FILE_NAME_UP)
     for i in ["left", "right", "up", "down"]:
-        print("Max averaged sway {}: {}".format(i, wiisway.max_sway_quick(i)))
-        wiisway.plot_movement(i)
+        print("Max sway {}: {}".format(i, wiisway.max_sway_quick(i)))
+        wiisway.plot_best_movement(i)
