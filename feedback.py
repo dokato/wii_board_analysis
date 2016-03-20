@@ -57,6 +57,7 @@ class WiiSway(object):
         return xa, ya, xb, yb, xc, yc
         
     def read_file(self, tag_format='obci'):
+        "read file with Wiiboard data"
         file_name = self.filepath + self.filename
         wbb_mgr = WBBReadManager(file_name+'.obci.xml', file_name+'.obci.raw', file_name + '.' + tag_format + '.tag')
         return wbb_mgr
@@ -65,7 +66,6 @@ class WiiSway(object):
         "extract signal *filename* data for given condition (direction)"
         #load data from right sway task
         wbb_mgr = self.read_file(tag_format='game')
-                                 
         wbb_mgr.mgr = analysis_helper.set_first_timestamp(wbb_mgr.mgr) #adjusting tags to signal
         wbb_mgr.get_x()
         wbb_mgr.get_y()

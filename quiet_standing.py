@@ -7,6 +7,9 @@ from obci.analysis.balance.wii_analysis import *
 
  
 import matplotlib.pyplot as py
+import matplotlib
+matplotlib.rc('xtick', labelsize=12) 
+matplotlib.rc('ytick', labelsize=15) 
 py.style.use('ggplot')
 
 from obci.exps.ventures.analysis import analysis_baseline
@@ -15,18 +18,24 @@ from obci.exps.ventures.analysis import analysis_helper
 #from obci.acquisition import acquisition_helper
 from utils.wiiboard_utils import *
 
-FILE_PATH = 'dane/wii_mg/' #full path
-FILE_NAME = 'wii_baseline_2016-03-02_14-37-22' #file name without extension
+PERSON = "dk"
 
-FILE_PATHd = 'dane/wii_dk/' #full path
-FILE_NAMEd = 'wii_baseline_2016-03-02_15-08-09' #file name without extension
+if PERSON == "mg":
+    FILE_PATH = 'dane/wii_mg/' #full path
+    FILE_NAME = 'wii_baseline_2016-03-02_14-37-22' #file name without extension
+else:
+    FILE_PATH = 'dane/wii_dk/' #full path
+    FILE_NAME = 'wii_baseline_2016-03-02_15-08-09' #file name without extension
+    
 XSCALE = 22.5
 YSCALE = 13
 
 def read_file(file_path, file_name, tag_format = 'obci'):
     "From *filepath* and *filename* it returns WBBReadManager object"
     file_name = file_path + file_name
-    wbb_mgr = WBBReadManager(file_name+'.obci.xml', file_name+'.obci.raw', file_name + '.' + tag_format + '.tag')
+    wbb_mgr = WBBReadManager(file_name+'.obci.xml', 
+                             file_name+'.obci.raw', file_name 
+                             + '.' + tag_format + '.tag')
     return wbb_mgr
 
 def read_wiidata(filepath, filename, tags_labels=None, show=False, supt=True):
@@ -42,7 +51,8 @@ def read_wiidata(filepath, filename, tags_labels=None, show=False, supt=True):
     """
     wbb_mgr = read_file(filepath, filename)
     if not tags_labels:
-        tags_labels = [('ss_start','ss_stop'),('ss_oczy_start','ss_oczy_stop')]
+        tags_labels = [('ss_start','ss_stop'),\
+                      ('ss_oczy_start','ss_oczy_stop')]
 
     #add two additional (x, y) channels (computed from sensor values)
     wbb_mgr.get_x()
@@ -58,12 +68,12 @@ def read_wiidata(filepath, filename, tags_labels=None, show=False, supt=True):
     #extract fragments from standing task with eyes open
     # first subject
     smart_tags = wii_cut_fragments(wbb_mgr, start_tag_name=tags_labels[0][0],
-                                            end_tags_names=[tags_labels[0][1]])
+                                   end_tags_names=[tags_labels[0][1]])
     sm_x = smart_tags[0].get_channel_samples('x')*XSCALE
     sm_y = smart_tags[0].get_channel_samples('y')*YSCALE
 
     smart_tags = wii_cut_fragments(wbb_mgr, start_tag_name=tags_labels[1][0],
-                                            end_tags_names=[tags_labels[1][1]])
+                                   end_tags_names=[tags_labels[1][1]])
     sm_x_oz = smart_tags[0].get_channel_samples('x')*XSCALE
     sm_y_oz = smart_tags[0].get_channel_samples('y')*YSCALE
     if show:
@@ -73,7 +83,7 @@ def read_wiidata(filepath, filename, tags_labels=None, show=False, supt=True):
         py.show()
     return sm_x, sm_y, sm_x_oz, sm_y_oz, wbb_mgr
  
-def wii_plot(sm_x, sm_y, sm_x_oz, sm_y_oz, n_bins=25, subject_name='', savepic=False):
+def wii_plot(sm_x, sm_y, sm_x_oz, sm_y_oz, n_bins=15, subject_name='', savepic=False):
     """
     From specified time series it plots histograms of standing deviations
     
@@ -93,27 +103,27 @@ def wii_plot(sm_x, sm_y, sm_x_oz, sm_y_oz, n_bins=25, subject_name='', savepic=F
     bins_own = np.array([np.linspace(full_min_x, full_max_x, n_bins),
                          np.linspace(full_min_y, full_max_y, n_bins)])
     
+    
     fig = py.figure(figsize=(10,10))
-    ax1 = fig.add_subplot(211)
+    ax1 = fig.add_subplot(121, aspect='equal')
     py.hist2d(sm_x,sm_y,bins=bins_own)
     py.xlim([full_min_x, full_max_x])
     py.ylim([full_min_y, full_max_y])
-    py.title("Oczy otwarte")
-    py.xlabel('Ox')
-    py.ylabel('Oy')
-    ax2 = fig.add_subplot(212)
+    py.title("Oczy otwarte", fontsize=30)
+    py.xlabel('Ox', fontsize=24)
+    py.ylabel('Oy', fontsize=24)
+    ax2 = fig.add_subplot(122, aspect='equal')
     py.hist2d(sm_x_oz,sm_y_oz,bins=bins_own)
     py.xlim([full_min_x, full_max_x])
     py.ylim([full_min_y, full_max_y])
-    py.title("Oczy zamkniete")
-    py.xlabel('Ox')
-    py.ylabel('Oy')
+    py.title("Oczy zamkniete", fontsize=30)
+    py.xlabel('Ox', fontsize=24)
     position=fig.add_axes([0.93,0.1,0.02,0.35])
     py.colorbar(cax=position)
     if len(subject_name)>0:
         py.suptitle('subject: {}'.format(subject_name))
     if savepic:
-        py.savefig('lochist_{}.png'.format(subject_name))
+        py.savefig('lochist_{}.png'.format(subject_name),bbox_inches='tight')
     py.show()
 
 def calculate_coef_wii(sm_x, sm_y, wbb_mgr, title=''):
