@@ -7,7 +7,8 @@ from obci.analysis.balance.wii_analysis import *
 
 from obci.exps.ventures.analysis import analysis_baseline
 from obci.exps.ventures.analysis import analysis_helper
- 
+
+from utils.wiiboard_utils import maximal_sway 
 #from obci.acquisition import acquisition_helper
 import numpy as np
 import matplotlib.pyplot as py
@@ -71,10 +72,10 @@ class WiiSway(object):
         y_quick = [YSCALE*i.get_channel_samples('y') for i in smart_tags_quick]
         #extract fragments from sway&stay task (right)
         smart_tags_long = wii_cut_fragments(wbb_mgr, start_tag_name=self.tags_labels['long'][0],
-                                                     end_tags_names=[self.tags_labels['long'][0]])
+                                                     end_tags_names=[self.tags_labels['long'][1]])
         #sig_fragments_long = [i.get_samples() for i in smart_tags_long]
-        x_long = [XSCALE*i.get_channel_samples('x') for i in smart_tags_quick]
-        y_long = [YSCALE*i.get_channel_samples('y') for i in smart_tags_quick]
+        x_long = [XSCALE*i.get_channel_samples('x') for i in smart_tags_long]
+        y_long = [YSCALE*i.get_channel_samples('y') for i in smart_tags_long]
         self.N = len(x_quick)
         return wbb_mgr, x_quick, y_quick, x_long, y_long
     
@@ -114,26 +115,41 @@ class WiiSway(object):
         self.down_y_long  = y_l
         self.down_wbb_mgr = wbb
 
-    def max_sway_quick(self, direction):
-        "maximal sway from given *direction*"
-        sm_x = self.__dict__["{}_x_quick".format(direction)]
-        sm_y = self.__dict__["{}_y_quick".format(direction)]
-        x_sway = np.zeros(self.N)
-        y_sway = np.zeros(self.N)
-        sway = np.zeros(self.N)
-        for i in range(self.N): 
-            max_sway, max_AP, max_ML = wii_max_sway_AP_MP(sm_x[i], sm_y[i])
-            x_sway[i] = max_AP
-            y_sway[i] = max_ML
-            sway[i] = max_sway
-        self.__dict__["{}_best_idx".format(direction)] = np.argmax(sway)
+    def max_sway(self, direction, condition='quick', way=1):
+        """
+        Maximal sway from given *direction* for given *condition*=
+        'quick' or 'long'
+        """
+        sm_x = self.__dict__["{}_x_{}".format(direction, condition)]
+        sm_y = self.__dict__["{}_y_{}".format(direction, condition)]
+        N = len(sm_x)
+        x_sway = np.zeros(N)
+        y_sway = np.zeros(N)
+        sway = np.zeros(N)
+        for i in range(N): 
+            if way==1:
+                max_sway, max_AP, max_ML = wii_max_sway_AP_MP(sm_x[i], sm_y[i])
+                x_sway[i] = max_AP
+                y_sway[i] = max_ML
+                sway[i] = max_sway
+            else:
+                max_AP, max_ML = maximal_sway(sm_x[i], sm_y[i])
+                x_sway[i] = max_AP
+                y_sway[i] = max_ML
+                sway[i] = np.sqrt(max_AP**2+max_ML**2)
+
+        self.__dict__["{}_{}_best_idx".format(direction, condition)] = np.argmax(sway)
         return np.max(sway)
 
-    def plot_best_movement(self, direction, show=False):
-        "Show or save COP pictures of data for given *direction*"
-        idx = self.__dict__["{}_best_idx".format(direction)]
-        sm_x = self.__dict__["{}_x_quick".format(direction)][idx]
-        sm_y = self.__dict__["{}_y_quick".format(direction)][idx]
+    def plot_best_movement(self, direction, condition='quick', show=False):
+        """
+        Show or save COP pictures of data for given *direction*
+        but only for the best movement - with maximal sway among
+        all trials.
+        """
+        idx = self.__dict__["{}_{}_best_idx".format(direction, condition)]
+        sm_x = self.__dict__["{}_x_{}".format(direction, condition)][idx]
+        sm_y = self.__dict__["{}_y_{}".format(direction, condition)][idx]
         py.figure()
         time = np.linspace(0, len(sm_x)/self.fs, len(sm_x))
         ax1 = py.subplot(221)
@@ -146,22 +162,23 @@ class WiiSway(object):
         ax2.set_ylabel('position COPy [cm]')
         ax2.set_xlabel('Time [s]')
         ax2.set_title('COPy position')
-        ax3.plot(sm_x,sm_y)
+        ax3.plot(sm_x, sm_y)
         ax3.set_ylabel('position COPy [cm]')
         ax3.set_xlabel('position COPx [cm]')
         ax3.set_title('COP position')
         py.tight_layout()
-        py.savefig('images/nofeedback_best_trial_' + direction)
+        py.savefig('images/nofeedback_best_trial_'+direction+'_'+condition)
         if show:
             py.show()
         py.clf()
     
-    def plot_movement(self, direction, show=False):
+    def plot_movement(self, direction, condition='quick', show=False):
         "Show or save COP pictures of data for given *direction*"
-        sm_x = self.__dict__["{}_x_quick".format(direction)]
-        sm_y = self.__dict__["{}_y_quick".format(direction)]
+        sm_x = self.__dict__["{}_x_{}".format(direction, condition)]
+        sm_y = self.__dict__["{}_y_{}".format(direction, condition)]
+        N = len(sm_x)
         py.figure()
-        for i in range(self.N):
+        for i in range(N):
             time = np.linspace(0, len(sm_x[i])/self.fs, len(sm_x[i]))
             ax1 = py.subplot(221)
             ax2 = py.subplot(223)
@@ -178,7 +195,7 @@ class WiiSway(object):
             ax3.set_xlabel('position COPx [cm]')
             ax3.set_title('COP position')
             py.tight_layout()
-            py.savefig('images/' + direction + '_nofeedback_trial%d' % (i+1,))
+            py.savefig('images/nofeedback_' + direction + '_'+condition+'_trial%d' % (i+1,))
             if show:
                 py.show()
             py.clf()
@@ -190,5 +207,10 @@ if __name__ == '__main__':
     wiisway.add_down(FILE_NAME_DOWN)
     wiisway.add_up(FILE_NAME_UP)
     for i in ["left", "right", "up", "down"]:
-        print("Max sway {}: {}".format(i, wiisway.max_sway_quick(i)))
+        print("Max sway quick {}\t{}\t{}".format(i, wiisway.max_sway(i,"quick"),
+                                                wiisway.max_sway(i,"quick",way=2)))
         wiisway.plot_best_movement(i)
+    for i in ["left", "right", "up", "down"]:
+        print("Max sway long {}\t{}\t{}".format(i, wiisway.max_sway(i,"long"),
+                                                wiisway.max_sway(i,"long",way=2)))
+        wiisway.plot_best_movement(i,'long')

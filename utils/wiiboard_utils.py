@@ -14,7 +14,7 @@ def maximal_sway(x, y):
     """
     mnx, mny = min(x), min(y)
     mxx, mxy = max(x), max(y)
-    return mxx-mnx, mxy-mny
+    return np.abs(mxx-mnx), np.abs(mxy-mny)
 
 def mean_total_velocity(x, y, fs, timewin=1):
     """
