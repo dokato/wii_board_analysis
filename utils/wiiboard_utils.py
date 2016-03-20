@@ -43,3 +43,18 @@ def rms(x, y):
     x = np.asarray(x)
     y = np.asarray(y)
     return np.sqrt(np.mean(x**2)), np.sqrt(np.mean(y**2))
+    
+def plot_movement(signals, properties, PERSON, lim_X, lim_Y):
+    fig=py.figure()
+    ax = fig.add_subplot(111, aspect='equal')
+    for i  in range(len(properties[0])):
+        x = signals[properties[1][i]][0]
+        y = signals[properties[1][i]][1]
+        ax.plot(x, y, 'r')
+        ax.set_ylabel('position COPy [cm]')
+        ax.set_xlabel('position COPx [cm]')
+        ax.set_xlim((-lim_X, lim_X))
+        ax.set_ylim((-lim_Y, lim_Y))
+    ax.set_title(PERSON)
+    py.tight_layout()
+    py.show()
