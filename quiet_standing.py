@@ -4,6 +4,7 @@
 from obci.analysis.balance.wii_read_manager import WBBReadManager
 from obci.analysis.balance.wii_preprocessing import *
 from obci.analysis.balance.wii_analysis import *
+
  
 import matplotlib.pyplot as py
 py.style.use('ggplot')
@@ -19,6 +20,8 @@ FILE_NAME = 'wii_baseline_2016-03-02_14-37-22' #file name without extension
 
 FILE_PATHd = 'dane/wii_dk/' #full path
 FILE_NAMEd = 'wii_baseline_2016-03-02_15-08-09' #file name without extension
+XSCALE = 22.5
+YSCALE = 13
 
 def read_file(file_path, file_name, tag_format = 'obci'):
     "From *filepath* and *filename* it returns WBBReadManager object"
@@ -26,7 +29,7 @@ def read_file(file_path, file_name, tag_format = 'obci'):
     wbb_mgr = WBBReadManager(file_name+'.obci.xml', file_name+'.obci.raw', file_name + '.' + tag_format + '.tag')
     return wbb_mgr
 
-def read_wiidata(filepath, filename, tags_labels=None, show=True, supt=True):
+def read_wiidata(filepath, filename, tags_labels=None, show=False, supt=True):
     """
     It reads *filepath* and *filename* wii board data for two conditions
     specified by a labels in a format:
@@ -56,13 +59,13 @@ def read_wiidata(filepath, filename, tags_labels=None, show=True, supt=True):
     # first subject
     smart_tags = wii_cut_fragments(wbb_mgr, start_tag_name=tags_labels[0][0],
                                             end_tags_names=[tags_labels[0][1]])
-    sm_x = smart_tags[0].get_channel_samples('x')
-    sm_y = smart_tags[0].get_channel_samples('y')
+    sm_x = smart_tags[0].get_channel_samples('x')*XSCALE
+    sm_y = smart_tags[0].get_channel_samples('y')*YSCALE
 
     smart_tags = wii_cut_fragments(wbb_mgr, start_tag_name=tags_labels[1][0],
                                             end_tags_names=[tags_labels[1][1]])
-    sm_x_oz = smart_tags[0].get_channel_samples('x')
-    sm_y_oz = smart_tags[0].get_channel_samples('y')
+    sm_x_oz = smart_tags[0].get_channel_samples('x')*XSCALE
+    sm_y_oz = smart_tags[0].get_channel_samples('y')*YSCALE
     if show:
         print(wii_COP_path(wbb_mgr, sm_x, sm_y, plot=True))
         py.show()
