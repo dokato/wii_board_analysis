@@ -50,9 +50,8 @@ class WiiSway(object):
             self.tagnames = tagnames
         else:
             self.tags_labels = {'quick': ['szybkie_start', 'szybkie_stop'],
-                           'long' : ['start', 'stop']}
-                        
-    
+                                'long' : ['start', 'stop']}
+
     def extract_signal_fragments(self, filename):
         "extract signal *filename* data for given condition (direction)"
         #load data from right sway task
@@ -171,7 +170,7 @@ class WiiSway(object):
         if show:
             py.show()
         py.clf()
-    
+
     def plot_movement(self, direction, condition='quick', show=False):
         "Show or save COP pictures of data for given *direction*"
         sm_x = self.__dict__["{}_x_{}".format(direction, condition)]

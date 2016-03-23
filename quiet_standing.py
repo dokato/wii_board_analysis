@@ -18,7 +18,7 @@ from obci.exps.ventures.analysis import analysis_helper
 #from obci.acquisition import acquisition_helper
 from utils.wiiboard_utils import *
 
-PERSON = "dk"
+PERSON = "mg"
 
 if PERSON == "mg":
     FILE_PATH = 'dane/wii_mg/' #full path
@@ -92,8 +92,8 @@ def wii_plot(sm_x, sm_y, sm_x_oz, sm_y_oz, n_bins=15, subject_name='', savepic=F
     """
     mn_x1, mn_y1 = min(sm_x), min(sm_y)
     mx_x1, mx_y1 = max(sm_x), max(sm_y)
-    mn_x2, mn_y2 = min(sm_x), min(sm_y)
-    mx_x2, mx_y2 = max(sm_x), max(sm_y)
+    mn_x2, mn_y2 = min(sm_x_oz), min(sm_y_oz)
+    mx_x2, mx_y2 = max(sm_x_oz), max(sm_y_oz)
     
     full_max_x = max(mx_x1, mx_x2)
     full_max_y = max(mx_y1, mx_y2)
@@ -169,15 +169,32 @@ def romberg_coeff(sm_x, sm_y, sm_x_oz, sm_y_oz, wbb_mgr, q=True):
     """
     path_length, _, _ = wii_COP_path(wbb_mgr, sm_x, sm_y, plot=False)
     path_length_oz, _, _ = wii_COP_path(wbb_mgr, sm_x_oz, sm_y_oz, plot=False)
-    
+    romberg = path_length_oz/path_length
     if q:
-        print('Romberg measure: {}'.format(path_length_oz/path_length))
-    return path_length_oz/path_length
+        print('Romberg measure: {}'.format(romberg))
+    return romberg
+
+def modif_romberg_coeff(sm_x, sm_y, sm_x_oz, sm_y_oz, wbb_mgr, q=True):
+    """
+    From given coordinates vectors *x* and *y* for two consitions
+    it returns modified Romberg coefficient according to:
+    Tjerstrom F. et all, Romberg ratio in quiet stance posturography — 
+    Test to retest reliability, Gait & Posture, 2015.
+    
+    q - if False then silent. 
+    """
+    path_length, _, _ = wii_COP_path(wbb_mgr, sm_x, sm_y, plot=False)
+    path_length_oz, _, _ = wii_COP_path(wbb_mgr, sm_x_oz, sm_y_oz, plot=False)
+    
+    romberg = (path_length_oz-path_length)/(path_length_oz+path_length) *100
+    if q:
+        print('Modif. Romberg measure: {}'.format(romberg))
+    return romberg
 
 if __name__ == '__main__':
     #load data
     subject_name = FILE_PATH.split('_')[-1][:-1]
-    sm_x, sm_y, sm_x_oz, sm_y_oz, wbb_mgr = read_wiidata(FILE_PATH, FILE_NAME, show=0)
+    sm_x, sm_y, sm_x_oz, sm_y_oz, wbb_mgr = read_wiidata(FILE_PATH, FILE_NAME, show=1)
     wii_plot(sm_x, sm_y, sm_x_oz, sm_y_oz, subject_name=subject_name)
     max_sway, max_AP, max_ML = wii_max_sway_AP_MP(sm_x, sm_y)
     calculate_coef_wii(sm_x, sm_y, wbb_mgr, title='Eyes open')
